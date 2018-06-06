@@ -14,5 +14,8 @@ defmodule Protobuf.Protoc.Context do
 
             # For a message
             # Nested namespace when generating nested messages. It should be joined to get the full namespace
-            namespace: []
+            namespace: [],
+
+            # Generate optimized encode functions for messages. Only works for proto3 files.
+            generators: false
 end

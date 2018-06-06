@@ -69,9 +69,10 @@ defmodule Protobuf.Mixfile do
     args1 = [
       "-I",
       "#{test_path}/proto",
-      "--elixir_out=#{test_path}/proto_gen",
+      "--elixir_out=generators=true:#{test_path}/proto_gen",
       "--plugin=protoc-gen-elixir=protoc-gen-elixir",
-      "#{test_path}/proto/test.proto"
+      "#{test_path}/proto/test.proto",
+      "#{test_path}/proto/proto3.proto"
     ]
 
     IO.puts("==> protoc #{Enum.join(args1, " ")}")

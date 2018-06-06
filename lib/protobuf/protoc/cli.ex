@@ -30,6 +30,11 @@ defmodule Protobuf.Protoc.CLI do
     parse_params(ctx, t)
   end
 
+  def parse_params(ctx, ["generators=true" | t]) do
+    ctx = %{ctx | generators: true}
+    parse_params(ctx, t)
+  end
+
   def parse_params(ctx, _), do: ctx
 
   defp find_package_names(ctx, descs) do

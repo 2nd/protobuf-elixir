@@ -6,8 +6,13 @@ defmodule Protobuf do
       Module.register_attribute(__MODULE__, :oneofs, accumulate: true)
 
       @options unquote(opts)
-      unquote(encode_decode())
       @before_compile Protobuf.DSL
+
+      if @options[:generators] == true do
+        @before_compile Protobuf.Generator
+      else
+        unquote(encode_decode())
+      end
 
       def new(attrs \\ %{}) do
         Protobuf.Builder.new(__MODULE__, attrs)

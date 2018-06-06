@@ -115,6 +115,12 @@ $ protoc --elixir_out=./lib --plugin=./protoc-gen-elixir *.proto
 $ protoc -I protos --elixir_out=./lib protos/hello.proto
 ```
 
+## Contributing
+
+To run the test suite you will need to run `MIX_ENV=test mix eqc.install --mini` once you've cloned the repo and fetched dependencies.
+
+Tests can be run with `mix test` and additional integration tests with `mix test.integration`.
+
 ## Sponsors
 
 This project is being sponsored by [Tubi](https://tubitv.com/). Thank you!

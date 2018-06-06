@@ -59,13 +59,14 @@ defmodule Protobuf.Protoc.Generator.Message do
     end)
   end
 
-  def msg_opts_str(%{syntax: syntax}, opts) do
+  def msg_opts_str(%{syntax: syntax} = ctx, opts) do
     msg_options = opts
 
     opts = %{
       syntax: syntax,
       map: msg_options && msg_options.map_entry,
-      deprecated: msg_options && msg_options.deprecated
+      deprecated: msg_options && msg_options.deprecated,
+      generators: syntax == :proto3 && ctx.generators
     }
 
     str = Util.options_to_str(opts)

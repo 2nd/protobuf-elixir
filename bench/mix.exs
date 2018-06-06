@@ -19,7 +19,7 @@ defmodule ProtoBench.MixProject do
 
   defp deps do
     [
-      {:protobuf, "~> 0.5.3"},
+      {:protobuf, path: "../"},
       {:benchee, "~> 0.12", only: :dev},
       {:benchee_html, "~> 0.5", only: :dev},
     ]
