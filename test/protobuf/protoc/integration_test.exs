@@ -53,11 +53,11 @@ defmodule Protobuf.Protoc.IntegrationTest do
   #   end)
   # end
 
-  test "generated encode handles default values" do
+  test "generated encode with default values" do
     assert_defaults(encode_decode(%Everything{}), except: [])
   end
 
-  test "generated encode handles non-default values" do
+  test "generated encode with non-default values" do
     values = %{
       bool: true, int32: -21, int64: -9922232, uint32: 82882, uint64: 199922332321984,
       sint32: -221331, sint64: -29, fixed32: 4294967295, sfixed32: -2147483647,
@@ -69,6 +69,21 @@ defmodule Protobuf.Protoc.IntegrationTest do
       fixed64s: [1844674407370955161], sfixed64s: [-9223372036854775807],
       floats: [2.5], doubles: [-3.551], strings: ["over"],
       bytess: [<<9, 0, 0, 0>>], map1: %{"over" => 9000}
+    }
+
+    everything = encode_decode(struct(Everything, values))
+    assert_everything(everything, values)
+  end
+
+  test "generated encode with multi-value arrays" do
+    values = %{
+      bools: [true, false], int32s: [-21, 32], int64s: [-9922232, 9922232],
+      uint32s: [82882, 323], uint64s: [199922332321984, 3223001],
+      sint32s: [-221331, 221331], sint64s: [-29, 29],
+      fixed32s: [4294967295, 0, 1], sfixed32s: [1, 2, 3, 4, 5],
+      fixed64s: [192, 391, 12], sfixed64s: [-2, 2, 93, 11, -293321938],
+      floats: [2.5, 0, -5.50, 299381.0], doubles: [-3.551, 3.551], strings: ["over", "9000", "", "!"],
+      bytess: [<<9, 0, 0, 0>>, <<2, 0>>], map1: %{"over" => 9000, "spice" => 1337}
     }
 
     everything = encode_decode(struct(Everything, values))
@@ -99,7 +114,7 @@ defmodule Protobuf.Protoc.IntegrationTest do
   defp assert_everything(everything, expected) do
     Enum.each(expected, fn {k, v} ->
       actual = Map.get(everything, k)
-      assert actual == v, "expect default of #{inspect(v)} for #{k}, got #{inspect(actual)}"
+      assert actual == v, "expect value of #{inspect(v)} for #{k}, got #{inspect(actual)}"
     end)
   end
 end
