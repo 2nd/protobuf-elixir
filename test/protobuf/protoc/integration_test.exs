@@ -5,7 +5,7 @@ defmodule Protobuf.Protoc.IntegrationTest do
   use ExUnit.Case, async: true
   # @moduletag :integration
 
-  alias My.Test.Everything
+  alias My.Test.{Child, Everything}
 
   # test "encode and decode My.Test.Request" do
   #   entry = %My.Test.Reply.Entry{
@@ -63,12 +63,15 @@ defmodule Protobuf.Protoc.IntegrationTest do
       sint32: -221331, sint64: -29, fixed32: 4294967295, sfixed32: -2147483647,
       fixed64: 1844674407370955161, sfixed64: -9223372036854775807,
       float: 2.5, double: -3.551, string: "over", bytes: <<9, 0, 0, 0>>,
+      embed: %Child{id: 9001, name: "goku"},
 
       bools: [true], int32s: [-21], int64s: [-9922232], uint32s: [82882], uint64s: [199922332321984],
       sint32s: [-221331], sint64s: [-29], fixed32s: [4294967295], sfixed32s: [-2147483647],
       fixed64s: [1844674407370955161], sfixed64s: [-9223372036854775807],
       floats: [2.5], doubles: [-3.551], strings: ["over"],
-      bytess: [<<9, 0, 0, 0>>], map1: %{"over" => 9000}
+      bytess: [<<9, 0, 0, 0>>], map1: %{"over" => 9000}, map2: %{999999999999999 => 2.5},
+      embeds: [%Child{id: 18, name: "tea"}],
+      map3: %{9001 => %Child{id: 9001, name: "gohan"}}
     }
 
     everything = encode_decode(struct(Everything, values))
@@ -83,7 +86,10 @@ defmodule Protobuf.Protoc.IntegrationTest do
       fixed32s: [4294967295, 0, 1], sfixed32s: [1, 2, 3, 4, 5],
       fixed64s: [192, 391, 12], sfixed64s: [-2, 2, 93, 11, -293321938],
       floats: [2.5, 0, -5.50, 299381.0], doubles: [-3.551, 3.551], strings: ["over", "9000", "", "!"],
-      bytess: [<<9, 0, 0, 0>>, <<2, 0>>], map1: %{"over" => 9000, "spice" => 1337}
+      bytess: [<<9, 0, 0, 0>>, <<2, 0>>],
+      embeds: [%Child{id: 1, name: "a"}, %Child{id: 18, name: "black 🍵"}],
+      map1: %{"over" => 9000, "spice" => 1337}, map2: %{-999999999999999 => -2.5, 0 => 0},
+      map3: %{0 => %Child{id: 0, name: ""}, 18 => %Child{id: 18, name: "black 🍵"}}
     }
 
     everything = encode_decode(struct(Everything, values))
@@ -98,9 +104,10 @@ defmodule Protobuf.Protoc.IntegrationTest do
   @defaults [
     bool: false, int32: 0, int64: 0, uint32: 0, uint64: 0, sint32: 0, sint64: 0,
     fixed32: 0, sfixed32: 0, fixed64: 0, sfixed64: 0, float: 0.0, double: 0.0,
-    string: "" , bytes: "", bools: [], int32s: [], int64s: [], uint32s: [],
+    string: "" , bytes: "", embed: nil, bools: [], int32s: [], int64s: [], uint32s: [],
     uint64s: [], sint32s: [], sint64s: [], fixed32s: [], sfixed32s: [], fixed64s: [],
-    sfixed64s: [], floats: [], doubles: [], strings: [], bytess: [], map1: %{}
+    sfixed64s: [], floats: [], doubles: [], strings: [], bytess: [], embeds: [],
+    map1: %{}, map2: %{}, map3: %{}
   ]
 
   defp assert_defaults(everything, [except: except]) do

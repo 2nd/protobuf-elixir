@@ -18,6 +18,7 @@ defmodule My.Test.Everything do
           double: float,
           string: String.t(),
           bytes: String.t(),
+          embed: My.Test.Child.t() | nil,
           bools: [boolean],
           int32s: [integer],
           int64s: [integer],
@@ -33,7 +34,10 @@ defmodule My.Test.Everything do
           doubles: [float],
           strings: [String.t()],
           bytess: [String.t()],
-          map1: %{String.t() => integer}
+          embeds: [My.Test.Child.t()],
+          map1: %{String.t() => integer},
+          map2: %{integer => float},
+          map3: %{non_neg_integer => My.Test.Child.t() | nil}
         }
   defstruct [
     :bool,
@@ -51,6 +55,7 @@ defmodule My.Test.Everything do
     :double,
     :string,
     :bytes,
+    :embed,
     :bools,
     :int32s,
     :int64s,
@@ -66,7 +71,10 @@ defmodule My.Test.Everything do
     :doubles,
     :strings,
     :bytess,
-    :map1
+    :embeds,
+    :map1,
+    :map2,
+    :map3
   ]
 
   field :bool, 1, type: :bool
@@ -84,6 +92,7 @@ defmodule My.Test.Everything do
   field :double, 13, type: :double
   field :string, 14, type: :string
   field :bytes, 15, type: :bytes
+  field :embed, 16, type: My.Test.Child
   field :bools, 31, repeated: true, type: :bool
   field :int32s, 32, repeated: true, type: :int32
   field :int64s, 33, repeated: true, type: :int64
@@ -99,7 +108,10 @@ defmodule My.Test.Everything do
   field :doubles, 43, repeated: true, type: :double
   field :strings, 44, repeated: true, type: :string
   field :bytess, 45, repeated: true, type: :bytes
+  field :embeds, 46, repeated: true, type: My.Test.Child
   field :map1, 61, repeated: true, type: My.Test.Everything.Map1Entry, map: true
+  field :map2, 62, repeated: true, type: My.Test.Everything.Map2Entry, map: true
+  field :map3, 63, repeated: true, type: My.Test.Everything.Map3Entry, map: true
 end
 
 defmodule My.Test.Everything.Map1Entry do
@@ -114,4 +126,46 @@ defmodule My.Test.Everything.Map1Entry do
 
   field :key, 1, type: :string
   field :value, 2, type: :int32
+end
+
+defmodule My.Test.Everything.Map2Entry do
+  @moduledoc false
+  use Protobuf, generators: true, map: true, syntax: :proto3
+
+  @type t :: %__MODULE__{
+          key: integer,
+          value: float
+        }
+  defstruct [:key, :value]
+
+  field :key, 1, type: :int64
+  field :value, 2, type: :float
+end
+
+defmodule My.Test.Everything.Map3Entry do
+  @moduledoc false
+  use Protobuf, generators: true, map: true, syntax: :proto3
+
+  @type t :: %__MODULE__{
+          key: non_neg_integer,
+          value: My.Test.Child.t() | nil
+        }
+  defstruct [:key, :value]
+
+  field :key, 1, type: :uint32
+  field :value, 2, type: My.Test.Child
+end
+
+defmodule My.Test.Child do
+  @moduledoc false
+  use Protobuf, generators: true, syntax: :proto3
+
+  @type t :: %__MODULE__{
+          id: non_neg_integer,
+          name: String.t()
+        }
+  defstruct [:id, :name]
+
+  field :id, 1, type: :uint32
+  field :name, 2, type: :string
 end

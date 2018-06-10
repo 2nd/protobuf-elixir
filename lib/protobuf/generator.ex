@@ -33,6 +33,10 @@ defmodule Protobuf.Generator do
       end
 
       if opts[:repeated] do
+        type = case is_struct?(type) do
+          true -> {:struct, type}
+          false -> type
+        end
         fnum = Encoder.encode_fnum(tag, :embedded)
         quote do
           Generator.encode_repeated_field(unquote(fnum), unquote(type), struct.unquote(name), unquote(opts))
@@ -60,6 +64,11 @@ defmodule Protobuf.Generator do
         Protobuf.Decoder.decode(data, __MODULE__)
       end
     end
+  end
+
+  # awful
+  defp is_struct?(type) do
+    String.starts_with?(Atom.to_string(type), "Elixir.")
   end
 
   def encode_field(_fnum, _type, nil, _opts), do: <<>>
@@ -178,33 +187,55 @@ defmodule Protobuf.Generator do
     <<>>
   end
 
-  # TODO: This can be much optimized
-  # TODO: Why can't this (or repeated bytes and repeated strings) be packed?
-  #       it this a pbuf rule, or a bug in the library's decoder?
+  def encode_repeated_field(_fnum, _type, [], _opts) do
+    <<>>
+  end
+
+  # TODO: Push more of this at compile time. ktype, vtype, kfnum and vfnum can
+  # all be derived at compile time. However, as-is, the data is no longer available
+  # by the time our generator runs. All we have is the generated KeyValue "Entry"
+  # type (which hasn't isn't available to query yet (because it's defined AFTER?))
   def encode_repeated_field(fnum, :map, map, opts) do
-    type = opts[:type]
+    props = opts[:type].__message_props__()
+
+    ktype = props.field_props[1].type
+    vtype = props.field_props[2].type
+
+    kfnum = Encoder.encode_fnum(1, ktype)
+    vfnum = Encoder.encode_fnum(2, vtype)
+
     Enum.reduce(map, [], fn {key, value}, acc ->
-      encoded = type.encode(struct(type, %{key: key, value: value}))
-      [[fnum, byte_size(encoded), encoded] | acc]
+      encoded = [
+        encode_field(kfnum, ktype, key, opts),
+        encode_field(vfnum, value_type, value, opts)
+      ]
+      byte_size = :erlang.iolist_size(encoded)
+      [[fnum, byte_size, encoded] | acc]
     end)
   end
 
-  # not sure why these need to be special
+  # In proto3, only scalar numeric types are packed.
   def encode_repeated_field(fnum, type, enum, _opts) when type in [:bytes, :string] do
     Enum.reduce(enum, [], fn value, acc ->
       [acc, fnum, encode_value(type, value)]
     end)
   end
 
-  def encode_repeated_field(fnum, type, map, _opts) do
-    encoded = Enum.reduce(map, [], fn value, acc ->
+  def encode_repeated_field(fnum, {:struct, type}, enum, opts) do
+    Enum.reduce(enum, [], fn value, acc ->
+      [acc, encode_field(fnum, type, value, opts)]
+    end)
+  end
+
+  def encode_repeated_field(fnum, type, enum, _opts) do
+    encoded = Enum.reduce(enum, [], fn value, acc ->
       [acc, encode_value(type, value)]
     end)
     byte_size = :erlang.iolist_size(encoded)
     [fnum, Encoder.encode_varint(byte_size), encoded]
   end
 
-  defp encode_value(type, value) do
-    Encoder.encode_type(type, value)
+  defp encode_value(type, val) do
+    Encoder.encode_type(type, val)
   end
 end

@@ -18,6 +18,7 @@ message Everything {
   double double = 13;
   string string = 14;
   bytes bytes = 15;
+  Child embed = 16;
 
   repeated bool bools = 31;
   repeated int32 int32s = 32;
@@ -34,6 +35,14 @@ message Everything {
   repeated double doubles = 43;
   repeated string strings = 44;
   repeated bytes bytess = 45;
+  repeated Child embeds = 46;
 
   map<string, int32> map1 = 61;
+  map<int64, float> map2 = 62;
+  map<uint32, Child> map3 = 63;
+}
+
+message Child {
+  uint32 id = 1;
+  string name = 2;
 }
