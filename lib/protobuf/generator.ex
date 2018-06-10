@@ -32,20 +32,30 @@ defmodule Protobuf.Generator do
         false -> special_type
       end
 
-      if opts[:repeated] do
-        type = case is_struct?(type) do
-          true -> {:struct, type}
-          false -> type
-        end
-        fnum = Encoder.encode_fnum(tag, :embedded)
-        quote do
-          Generator.encode_repeated_field(unquote(fnum), unquote(type), struct.unquote(name), unquote(opts))
-        end
-      else
-        fnum = Encoder.encode_fnum(tag, type)
-        quote do
-          Generator.encode_field( unquote(fnum), unquote(type), struct.unquote(name), unquote(opts))
-        end
+      cond do
+        opts[:map] ->
+          ktype = opts[:ktype]
+          vtype = opts[:vtype]
+          knum = Encoder.encode_fnum(1, ktype)
+          vnum = Encoder.encode_fnum(2, vtype)
+          fnum = Encoder.encode_fnum(tag, :embedded)
+          quote do
+            Generator.encode_map_field(unquote(fnum), struct.unquote(name), unquote(knum), unquote(ktype), unquote(vnum), unquote(vtype))
+          end
+        opts[:repeated] ->
+          type = case is_struct?(type) do
+            true -> {:struct, type}
+            false -> type
+          end
+          fnum = Encoder.encode_fnum(tag, :embedded)
+          quote do
+            Generator.encode_repeated_field(unquote(fnum), unquote(type), struct.unquote(name))
+          end
+        true ->
+          fnum = Encoder.encode_fnum(tag, type)
+          quote do
+            Generator.encode_field( unquote(fnum), unquote(type), struct.unquote(name))
+          end
       end
     end)
 
@@ -71,24 +81,24 @@ defmodule Protobuf.Generator do
     String.starts_with?(Atom.to_string(type), "Elixir.")
   end
 
-  def encode_field(_fnum, _type, nil, _opts), do: <<>>
-  def encode_field(_fnum, :bool, false, _opts), do: <<>>
-  def encode_field(_fnum, :int32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :int64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :uint32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :uint64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sint32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sint64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :fixed32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :fixed64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sfixed32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sfixed64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :float, 0, _opts), do: <<>>
-  def encode_field(_fnum, :float, 0.0, _opts), do: <<>>
-  def encode_field(_fnum, :double, 0, _opts), do: <<>>
-  def encode_field(_fnum, :double, 0.0, _opts), do: <<>>
+  def encode_field(_fnum, _type, nil), do: <<>>
+  def encode_field(_fnum, :bool, false), do: <<>>
+  def encode_field(_fnum, :int32, 0), do: <<>>
+  def encode_field(_fnum, :int64, 0), do: <<>>
+  def encode_field(_fnum, :uint32, 0), do: <<>>
+  def encode_field(_fnum, :uint64, 0), do: <<>>
+  def encode_field(_fnum, :sint32, 0), do: <<>>
+  def encode_field(_fnum, :sint64, 0), do: <<>>
+  def encode_field(_fnum, :fixed32, 0), do: <<>>
+  def encode_field(_fnum, :fixed64, 0), do: <<>>
+  def encode_field(_fnum, :sfixed32, 0), do: <<>>
+  def encode_field(_fnum, :sfixed64, 0), do: <<>>
+  def encode_field(_fnum, :float, 0), do: <<>>
+  def encode_field(_fnum, :float, 0.0), do: <<>>
+  def encode_field(_fnum, :double, 0), do: <<>>
+  def encode_field(_fnum, :double, 0.0), do: <<>>
 
-  def encode_field(fnum, :bool, true, _opts) do
+  def encode_field(fnum, :bool, true) do
     [fnum, <<1>>]
   end
 
@@ -100,134 +110,126 @@ defmodule Protobuf.Generator do
   @uint32_max 4_294_967_295
   @uint64_max 18_446_744_073_709_551_615
 
-  def encode_field(_tag, _type, nil, _opts) do
+  def encode_field(_tag, _type, nil) do
     <<>>
   end
 
-  def encode_field(_fnum, :int32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :int64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :uint32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :uint64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sint32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sint64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :fixed32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :fixed64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sfixed32, 0, _opts), do: <<>>
-  def encode_field(_fnum, :sfixed64, 0, _opts), do: <<>>
-  def encode_field(_fnum, :float, 0, _opts), do: <<>>
-  def encode_field(_fnum, :float, 0.0, _opts), do: <<>>
-  def encode_field(_fnum, :double, 0, _opts), do: <<>>
-  def encode_field(_fnum, :double, 0.0, _opts), do: <<>>
-  def encode_field(_fnum, :string, <<>>, _opts), do: <<>>
-  def encode_field(_fnum, :bytes, <<>>, _opts), do: <<>>
+  def encode_field(_fnum, :int32, 0), do: <<>>
+  def encode_field(_fnum, :int64, 0), do: <<>>
+  def encode_field(_fnum, :uint32, 0), do: <<>>
+  def encode_field(_fnum, :uint64, 0), do: <<>>
+  def encode_field(_fnum, :sint32, 0), do: <<>>
+  def encode_field(_fnum, :sint64, 0), do: <<>>
+  def encode_field(_fnum, :fixed32, 0), do: <<>>
+  def encode_field(_fnum, :fixed64, 0), do: <<>>
+  def encode_field(_fnum, :sfixed32, 0), do: <<>>
+  def encode_field(_fnum, :sfixed64, 0), do: <<>>
+  def encode_field(_fnum, :float, 0), do: <<>>
+  def encode_field(_fnum, :float, 0.0), do: <<>>
+  def encode_field(_fnum, :double, 0), do: <<>>
+  def encode_field(_fnum, :double, 0.0), do: <<>>
+  def encode_field(_fnum, :string, <<>>), do: <<>>
+  def encode_field(_fnum, :bytes, <<>>), do: <<>>
 
-  def encode_field(fnum, :int32, val, _opts) when val <= @int32_max and val >= @int32_min do
+  def encode_field(fnum, :int32, val) when val <= @int32_max and val >= @int32_min do
     [fnum, Encoder.encode_type(:int32, val)]
   end
 
-  def encode_field(fnum, :int64, val, _opts) when val <= @int64_max and val >= @int64_min do
+  def encode_field(fnum, :int64, val) when val <= @int64_max and val >= @int64_min do
     [fnum, Encoder.encode_type(:int64, val)]
   end
 
-  def encode_field(fnum, :uint32, val, _opts) when val <= @uint32_max and val >= 0 do
+  def encode_field(fnum, :uint32, val) when val <= @uint32_max and val >= 0 do
     [fnum, Encoder.encode_type(:uint32, val)]
   end
 
-  def encode_field(fnum, :uint64, val, _opts) when val <= @uint64_max and val >= 0 do
+  def encode_field(fnum, :uint64, val) when val <= @uint64_max and val >= 0 do
     [fnum, Encoder.encode_type(:uint64, val)]
   end
 
-  def encode_field(fnum, :sint32, val, _opts) when val <= @int32_max and val >= @int32_min do
+  def encode_field(fnum, :sint32, val) when val <= @int32_max and val >= @int32_min do
     [fnum, Encoder.encode_type(:sint32, val)]
   end
 
-  def encode_field(fnum, :sint64, val, _opts) when val <= @int64_max and val >= @int64_min do
+  def encode_field(fnum, :sint64, val) when val <= @int64_max and val >= @int64_min do
     [fnum, Encoder.encode_type(:sint64, val)]
   end
 
-  def encode_field(fnum, :fixed32, val, _opts) when val <= @uint32_max and val >= 0 do
+  def encode_field(fnum, :fixed32, val) when val <= @uint32_max and val >= 0 do
     [fnum, Encoder.encode_type(:fixed32, val)]
   end
 
-  def encode_field(fnum, :fixed64, val, _opts) when val <= @uint64_max and val >= 0 do
+  def encode_field(fnum, :fixed64, val) when val <= @uint64_max and val >= 0 do
     [fnum, Encoder.encode_type(:fixed64, val)]
   end
 
-  def encode_field(fnum, :sfixed32, val, _opts) when val <= @int32_max and val >= @int32_min do
+  def encode_field(fnum, :sfixed32, val) when val <= @int32_max and val >= @int32_min do
     [fnum, Encoder.encode_type(:sfixed32, val)]
   end
 
-  def encode_field(fnum, :sfixed64, val, _opts) when val <= @int64_max and val >= @int64_min do
+  def encode_field(fnum, :sfixed64, val) when val <= @int64_max and val >= @int64_min do
     [fnum, Encoder.encode_type(:sfixed64, val)]
   end
 
-  def encode_field(fnum, :float, val, _opts) when is_number(val) do
+  def encode_field(fnum, :float, val) when is_number(val) do
     [fnum, Encoder.encode_type(:float, val)]
   end
 
-  def encode_field(fnum, :double, val, _opts) when is_number(val) do
+  def encode_field(fnum, :double, val) when is_number(val) do
     [fnum, Encoder.encode_type(:double, val)]
   end
 
-  def encode_field(fnum, type, %{__struct__: _} = val, _opts) do
+  def encode_field(fnum, type, %{__struct__: _} = val) do
     encoded = type.encode(val)
     byte_size = :erlang.iolist_size(encoded)
     [fnum, Encoder.encode_varint(byte_size), encoded]
   end
 
-  def encode_field(fnum, type, val, _opts) do
+  def encode_field(fnum, type, val) do
     [fnum, encode_value(type, val)]
   end
 
-  def encode_repeated_field(_fnum, _type, nil, _opts) do
+  def encode_map_field(_fnum, nil, _knum, _ktype, _vnum, _vtype) do
     <<>>
   end
 
-  def encode_repeated_field(_fnum, :map, map, _opts) when map_size(map) == 0 do
+  def encode_map_field(_fnum, map, _knum, _ktype, _vnum, _vtype) when map_size(map) == 0 do
     <<>>
   end
 
-  def encode_repeated_field(_fnum, _type, [], _opts) do
-    <<>>
-  end
-
-  # TODO: Push more of this at compile time. ktype, vtype, kfnum and vfnum can
-  # all be derived at compile time. However, as-is, the data is no longer available
-  # by the time our generator runs. All we have is the generated KeyValue "Entry"
-  # type (which hasn't isn't available to query yet (because it's defined AFTER?))
-  def encode_repeated_field(fnum, :map, map, opts) do
-    props = opts[:type].__message_props__()
-
-    ktype = props.field_props[1].type
-    vtype = props.field_props[2].type
-
-    kfnum = Encoder.encode_fnum(1, ktype)
-    vfnum = Encoder.encode_fnum(2, vtype)
-
+  def encode_map_field(fnum, map, knum, ktype, vnum, vtype) do
     Enum.reduce(map, [], fn {key, value}, acc ->
       encoded = [
-        encode_field(kfnum, ktype, key, opts),
-        encode_field(vfnum, value_type, value, opts)
+        encode_field(knum, ktype, key),
+        encode_field(vnum, vtype, value)
       ]
       byte_size = :erlang.iolist_size(encoded)
       [[fnum, byte_size, encoded] | acc]
     end)
   end
 
+  def encode_repeated_field(_fnum, _type, nil) do
+    <<>>
+  end
+
+  def encode_repeated_field(_fnum, _type, []) do
+    <<>>
+  end
+
   # In proto3, only scalar numeric types are packed.
-  def encode_repeated_field(fnum, type, enum, _opts) when type in [:bytes, :string] do
+  def encode_repeated_field(fnum, type, enum) when type in [:bytes, :string] do
     Enum.reduce(enum, [], fn value, acc ->
       [acc, fnum, encode_value(type, value)]
     end)
   end
 
-  def encode_repeated_field(fnum, {:struct, type}, enum, opts) do
+  def encode_repeated_field(fnum, {:struct, type}, enum) do
     Enum.reduce(enum, [], fn value, acc ->
-      [acc, encode_field(fnum, type, value, opts)]
+      [acc, encode_field(fnum, type, value)]
     end)
   end
 
-  def encode_repeated_field(fnum, type, enum, _opts) do
+  def encode_repeated_field(fnum, type, enum) do
     encoded = Enum.reduce(enum, [], fn value, acc ->
       [acc, encode_value(type, value)]
     end)

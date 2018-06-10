@@ -109,9 +109,27 @@ defmodule My.Test.Everything do
   field :strings, 44, repeated: true, type: :string
   field :bytess, 45, repeated: true, type: :bytes
   field :embeds, 46, repeated: true, type: My.Test.Child
-  field :map1, 61, repeated: true, type: My.Test.Everything.Map1Entry, map: true
-  field :map2, 62, repeated: true, type: My.Test.Everything.Map2Entry, map: true
-  field :map3, 63, repeated: true, type: My.Test.Everything.Map3Entry, map: true
+
+  field :map1, 61,
+    repeated: true,
+    type: My.Test.Everything.Map1Entry,
+    ktype: :string,
+    map: true,
+    vtype: :int32
+
+  field :map2, 62,
+    repeated: true,
+    type: My.Test.Everything.Map2Entry,
+    ktype: :int64,
+    map: true,
+    vtype: :float
+
+  field :map3, 63,
+    repeated: true,
+    type: My.Test.Everything.Map3Entry,
+    ktype: :uint32,
+    map: true,
+    vtype: My.Test.Child
 end
 
 defmodule My.Test.Everything.Map1Entry do

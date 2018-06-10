@@ -142,7 +142,16 @@ defmodule Protobuf.Protoc.Generator.Message do
   def get_field(ctx, f, nested_maps, oneofs) do
     opts = field_options(f)
     map = nested_maps[f.type_name]
-    opts = if map, do: Map.put(opts, :map, true), else: opts
+    opts = case map do
+      {{ktype, _}, {vtype, vmod}} ->
+        ktype = TypeUtil.number_to_atom(ktype)
+        vtype = case TypeUtil.number_to_atom(vtype) do
+          :message -> String.to_atom("Elixir." <> vmod)
+          vtype -> vtype
+        end
+        Map.merge(opts, %{map: true, ktype: ktype, vtype: vtype})
+      _ -> opts
+    end
 
     opts =
       if length(oneofs) > 0 && f.oneof_index, do: Map.put(opts, :oneof, f.oneof_index), else: opts
